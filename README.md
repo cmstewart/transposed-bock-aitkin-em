@@ -80,6 +80,10 @@ The article reports a 100-replication comparison and the WILD application.
 The planned study has **2,000 assigned replications per condition**
 across 24 conditions: 48,000 datasets and 184,000 applicable fits. It is future
 work, not a result of this release.
+The [planned-simulation notebook](notebooks/planned_simulation.ipynb) provides
+the separate 2,000-replication runner, setup, smoke test, resume controls, and
+parameter-specific reports. See its [run guide](studies/confirmation/README.md)
+before starting; the full study is off by default and is computationally large.
 The repository does not redistribute WILD responses or claim
 to reconstruct individual parameter vectors that were not saved for the
 100-replication comparison.

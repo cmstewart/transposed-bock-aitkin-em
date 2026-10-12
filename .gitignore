@@ -9,3 +9,6 @@ dist/
 .DS_Store
 .env
 fit-output/
+simulation-output/
+.simulation-env/
+.ipynb_checkpoints/

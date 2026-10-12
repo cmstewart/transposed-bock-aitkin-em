@@ -1,0 +1,29 @@
+{
+  "study_id": "preprint_confirmation_2000_2026",
+  "purpose": "Prospectively specified primary and sensitivity comparisons; never pool with development or historical fits",
+  "base_seed": 20261012,
+  "repetitions": 2000,
+  "n_subjects": [20, 100],
+  "n_items": [1000, 10000],
+  "holdout_rate": 0.1,
+  "missing_rate": 0.0,
+  "conditions": [
+    {"name": "primary", "models": ["1pl", "2pl"], "correlations_2pl": [-0.4, 0.0, 0.4]},
+    {"name": "contaminated_normal", "models": ["2pl"], "correlations_2pl": [0.4], "contamination_rate": 0.1, "scale_multiplier": 3.0},
+    {"name": "clustered_items", "models": ["2pl"], "correlations_2pl": [0.4], "cluster_size": 20, "shared_variance_fraction": 0.3}
+  ],
+  "fitting_dependency": "Public transposed-bock-aitkin-em 1.4.0rc1 normalized map; WILD-style baseline adapters. This is a separate prospective execution, not a continuation of prior results.",
+  "transposed": {"max_iterations": 1000, "min_iterations": 20, "patience": 5, "damping": 0.5, "parameter_tolerance": 0.0002, "prediction_tolerance": 0.00001, "item_newton_steps": 20},
+  "jml_runtime": {"max_epochs": 300},
+  "vi_runtime": {"max_epochs": 4000, "prior_policy": "regular"},
+  "fitted_populations": "Normal only; 1PL and 2PL; TBAEM-D, TBAEM-C when applicable, torch_measure JML, py-irt VI",
+  "identification": "Generate N(0,1) capabilities; center realized log discrimination before generating responses. Export theta and b on the mean-b-zero, mean-log-a-zero realized-item scale, preserving probabilities.",
+  "sensitivity_targets": "Individual generating parameters and predictive risk. Under contaminated-normal misspecification, population differences from known generating moments are descriptive discrepancies, not bias about a proven likelihood target. Clustered items retain the normal marginal population; cross-item independence fails.",
+  "primary_contrasts": ["TBAEM-C minus TBAEM-D theta RMSE in nonzero-correlation cells", "Each TBAEM specification minus JML and VI theta RMSE", "Each TBAEM specification minus JML and VI held-out log loss"],
+  "secondary_outcomes": ["bias", "MAE", "MSE", "pooled RMSE", "mean replicate RMSE", "Spearman correlation", "Brier score", "population moment discrepancies", "truth-bin errors", "runtime", "limits and failures", "refreshed Fisher residuals"],
+  "mcse_unit": "independent replication, never individual parameter or held-out response",
+  "failure_policy": "2000 assigned attempts per condition; preserve all failures, limits, and interrupted attempts; never replace seeds or rerun a recorded attempt",
+  "smoke_policy": "Disjoint seeds and output tree; six small matrices with full fitting settings plus all 24 full-size generators. No smoke fit contributes to production. Runtime at the largest sizes is not established by the small smoke test.",
+  "execution": {"workers": 1, "disk_safety_factor": 1.5, "disk_reserve_gib": 4, "analysis_allowance_gib": 2},
+  "inference": "No parameter standard errors or coverage claims. Existing WILD predictive bootstrap and application fits are not rerun."
+}
