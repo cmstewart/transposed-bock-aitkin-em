@@ -117,3 +117,31 @@ def test_analysis_audits_saved_vectors(tmp_path, monkeypatch):
     path.write_text(json.dumps(value))
     with pytest.raises(AssertionError):
         analyze(tmp_path, [cell], "test", "smoke")
+
+
+@pytest.mark.parametrize("workers", [1, 4])
+def test_parallel_run_fits_each_matrix_once(tmp_path, monkeypatch, workers):
+    import threading
+    import launch
+    coordinates = [Cell("primary", "1pl", 12, 40, 0., rep, 100 + rep) for rep in range(10)]
+    calls, guard = [], threading.Lock()
+    def fake_child(cell, output, smoke_coordinate=None, log_path=None):
+        with guard:
+            calls.append(cell)
+        for method in methods(cell):
+            path = launch.directory(output, cell) / method / "summary.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"cell": asdict(cell), "method": method, "status": "returned"}))
+    monkeypatch.setattr(launch, "expected", lambda: coordinates)
+    monkeypatch.setattr(launch, "check", lambda output: {})
+    monkeypatch.setattr(launch, "verify", lambda output: "test")
+    monkeypatch.setattr(launch, "child", fake_child)
+    launch.run(tmp_path, 3, workers)
+    assert len(calls) == 3
+    launch.run(tmp_path, 0, workers)
+    assert sorted(calls, key=lambda c: c.replicate) == coordinates
+    assert len(json.loads((tmp_path / "execution_log.jsonl").read_text().splitlines()[-1])) == 5
+    (tmp_path / "STOP").touch()
+    coordinates.append(Cell("primary", "1pl", 12, 40, 0., 10, 110))
+    launch.run(tmp_path, 0, workers)
+    assert len(calls) == 10

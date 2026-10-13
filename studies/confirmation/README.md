@@ -73,7 +73,7 @@ After notebook setup, use `.simulation-env/bin/python` (Windows:
 ```sh
 python studies/confirmation/launch.py smoke
 python studies/confirmation/launch.py check
-python studies/confirmation/launch.py run
+python studies/confirmation/launch.py run --workers 88
 python studies/confirmation/launch.py status
 python studies/confirmation/launch.py analyze
 python studies/confirmation/launch.py analyze --require-complete
@@ -81,9 +81,15 @@ python studies/confirmation/launch.py analyze --require-complete
 
 Supply `--output PATH` consistently to use another destination. To stop after
 a bounded batch, use `run --max-matrices 24`; it does not lower the 2,000 target.
-Create `OUTPUT/STOP` for a graceful stop after the current matrix. Remove it
-to resume. Keep the computer awake. Only one worker writes each output tree;
-do not use a cloud-synchronized live directory as a multi-machine work queue.
+Create `OUTPUT/STOP` for a graceful stop after the current matrices. Remove it
+to resume. Keep the computer awake.
+
+`run --workers N` fits N matrices at once on one machine, each in its own
+single-threaded process (default 1). Seeds and estimators do not depend on N.
+Use at most one worker per physical core, or recorded runtimes are inflated.
+Each session's worker count is appended to `execution_log.jsonl`. Only one
+supervisor writes each output tree; do not use a cloud-synchronized live
+directory as a multi-machine work queue.
 
 The runner retains failed and interrupted attempts, does not replace their
 seeds, and refuses changed configurations. Source hashes, numerical dependency

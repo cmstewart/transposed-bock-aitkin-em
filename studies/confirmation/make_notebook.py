@@ -143,14 +143,22 @@ sized drive before freezing the study; compression may reduce actual usage.
 
 Set `RUN_PRODUCTION = True` only when you are ready. `MATRICES_THIS_SESSION = 0`
 means work toward all 48,000 matrices. A positive value stops after that many
-new matrices without changing the 2,000-per-condition target. One worker runs
-at a time, in a fresh process per matrix; all conditions advance together.
+new matrices without changing the 2,000-per-condition target. Each matrix runs
+in a fresh single-threaded process; all conditions advance together.
+
+`WORKERS` sets how many matrices are fitted at once. Seeds, estimators and
+settings do not depend on it, so it changes wall-clock time, not estimates.
+Use at most one worker per physical core: more workers share cores and
+inflate the recorded per-fit runtimes. On one worker the full study takes
+roughly 80 days; 88 workers take roughly one day. Each session's worker count
+is recorded in `execution_log.jsonl`.
 """)
 code('''RUN_PRODUCTION = False
 MATRICES_THIS_SESSION = 0
+WORKERS = 1
 if RUN_PRODUCTION:
     study("check")
-    study("run", "--max-matrices", MATRICES_THIS_SESSION)
+    study("run", "--max-matrices", MATRICES_THIS_SESSION, "--workers", WORKERS)
 else:
     print("Production is off. No production fits were launched.")
 ''')
@@ -158,10 +166,11 @@ md("""## 6. Progress, stopping and resuming
 
 The run cell stays busy and prints each matrix as it starts. For progress from
 another terminal, run the command printed below. Per-fit details are appended
-to `run.log`; TBAEM also writes `progress.json` inside its fit folder.
+to `run.log` (one file per worker under `logs/` when `WORKERS > 1`); TBAEM
+also writes `progress.json` inside its fit folder.
 
 To stop safely, create an empty file named `STOP` inside the output directory.
-The supervisor stops after the current matrix. Remove that file and rerun the
+The supervisor stops after the current matrices finish. Remove that file and rerun the
 run cell to resume. Do not start a second notebook on the same outputs.
 If the machine or process is interrupted mid-fit, that attempt is recorded as
 interrupted on resume and is not fitted again. Finished failures and limits

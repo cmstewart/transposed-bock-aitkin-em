@@ -136,7 +136,8 @@ def main():
         if len(candidates) != 1:
             raise ValueError("Unknown production coordinate")
         cell = candidates[0]
-    with exclusive_lock(args.output / "worker.lock"):
+    # One process per matrix; launch.py's supervisor lock excludes a second supervisor.
+    with exclusive_lock(args.output / "locks" / cell.label / f"rep_{cell.replicate:03d}.lock"):
         run_cell(cell, settings, args.output, source_hash, phase)
 
 
