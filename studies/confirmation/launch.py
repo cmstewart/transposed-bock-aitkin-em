@@ -52,15 +52,23 @@ def status(output):
     return list(groups.values())
 
 
-def child(cell, output, smoke_coordinate=None, log_path=None):
+def cores():
+    """CPUs available to this process; each worker's fits are pinned to one of them on Linux."""
+    return sorted(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else []
+
+
+def child(cell, output, smoke_coordinate=None, log_path=None, worker=0):
     command = [sys.executable, str(STUDY / "run.py"), "--cell", cell.label,
                "--replicate", str(cell.replicate), "--output", str(output)]
     if smoke_coordinate:
         command += ["--smoke-coordinate", str(smoke_coordinate)]
+    environment = dict(os.environ)
+    if cores():
+        environment["TBAEM_CPU"] = str(cores()[worker % len(cores())])
     log_path = log_path or output / "run.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("a", buffering=1) as log:
-        result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
+        result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=environment)
     if result.returncode:
         raise RuntimeError(f"Worker exited {result.returncode}; inspect {log_path}. Resume retains started fits as interrupted.")
 
@@ -140,7 +148,8 @@ def run(output, max_matrices, workers=1):
     # Matrices are handed out in the same replicate-major order as a single worker.
     with (output / "execution_log.jsonl").open("a") as stream:
         stream.write(json.dumps({"time": time.time(), "workers": workers, "cpu_count": os.cpu_count(),
-                                 "host": platform.node(), "max_matrices": max_matrices}) + "\n")
+                                 "pinned_cores": len(cores()), "host": platform.node(),
+                                 "max_matrices": max_matrices}) + "\n")
     pending = (cell for cell in expected() if not done(output, cell))
     guard, halt, errors = threading.Lock(), threading.Event(), []
     started = 0
@@ -171,7 +180,7 @@ def run(output, max_matrices, workers=1):
                 write_json(progress, {"cell": cell.label, "replicate": cell.replicate,
                            "time": time.time(), "pid": os.getpid(), "worker": index})
                 print(f"Starting {cell.label}, replication {cell.replicate + 1}/2000", flush=True)
-                child(cell, output, log_path=log_path)
+                child(cell, output, log_path=log_path, worker=index)
             except Exception as error:
                 with guard:
                     errors.append(error)

@@ -4,10 +4,16 @@ import argparse
 from contextlib import contextmanager
 from dataclasses import asdict
 import json
+import os
 from pathlib import Path
 import sys
 import time
 import traceback
+
+# Pin to the core launch.py assigned before numerical libraries start thread pools.
+# XLA otherwise spreads large TBAEM fits over several cores despite the BLAS limits.
+if "TBAEM_CPU" in os.environ and hasattr(os, "sched_setaffinity"):
+    os.sched_setaffinity(0, {int(os.environ["TBAEM_CPU"])})
 
 from protocol_tools import ROOT, OUTPUT, protocol, verify
 sys.path.insert(0, str(ROOT))

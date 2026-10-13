@@ -86,6 +86,8 @@ to resume. Keep the computer awake.
 
 `run --workers N` fits N matrices at once on one machine, each in its own
 single-threaded process (default 1). Seeds and estimators do not depend on N.
+On Linux each worker's fits are pinned to one core, because XLA otherwise
+spreads large TBAEM fits over several cores despite the BLAS thread limits.
 Use at most one worker per physical core, or recorded runtimes are inflated.
 Each session's worker count is appended to `execution_log.jsonl`. Only one
 supervisor writes each output tree; do not use a cloud-synchronized live

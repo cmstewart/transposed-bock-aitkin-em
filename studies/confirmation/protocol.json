@@ -24,6 +24,6 @@
   "mcse_unit": "independent replication, never individual parameter or held-out response",
   "failure_policy": "2000 assigned attempts per condition; preserve all failures, limits, and interrupted attempts; never replace seeds or rerun a recorded attempt",
   "smoke_policy": "Disjoint seeds and output tree; six small matrices with full fitting settings plus all 24 full-size generators. No smoke fit contributes to production. Runtime at the largest sizes is not established by the small smoke test.",
-  "execution": {"workers": "launch.py run --workers N (default 1), one single-threaded process per matrix, at most one per physical core; each session is recorded in execution_log.jsonl","disk_safety_factor": 1.5, "disk_reserve_gib": 4, "analysis_allowance_gib": 2},
+  "execution": {"workers": "launch.py run --workers N (default 1), one single-threaded process per matrix, pinned to its own core on Linux, at most one per physical core; each session is recorded in execution_log.jsonl","disk_safety_factor": 1.5, "disk_reserve_gib": 4, "analysis_allowance_gib": 2},
   "inference": "No parameter standard errors or coverage claims. Existing WILD predictive bootstrap and application fits are not rerun."
 }

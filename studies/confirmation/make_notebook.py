@@ -148,8 +148,9 @@ in a fresh single-threaded process; all conditions advance together.
 
 `WORKERS` sets how many matrices are fitted at once. Seeds, estimators and
 settings do not depend on it, so it changes wall-clock time, not estimates.
-Use at most one worker per physical core: more workers share cores and
-inflate the recorded per-fit runtimes. On one worker the full study takes
+On Linux each worker's fits are pinned to their own core, so every method is
+single-threaded; use at most one worker per physical core, or recorded per-fit
+runtimes are inflated. On one worker the full study takes
 roughly 80 days; 88 workers take roughly one day. Each session's worker count
 is recorded in `execution_log.jsonl`.
 """)
